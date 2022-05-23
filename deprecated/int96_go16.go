@@ -1,10 +1,11 @@
-//go:build !go1.16
+//go:build go1.16
 
 package deprecated
 
 import (
 	"math/big"
 	"math/bits"
+	"reflect"
 	"unsafe"
 )
 
@@ -70,7 +71,12 @@ func (i Int96) Len() int {
 // Int96ToBytes converts the slice of Int96 values to a slice of bytes sharing
 // the same backing array.
 func Int96ToBytes(data []Int96) []byte {
-	return unsafe.Slice(*(**byte)(unsafe.Pointer(&data)), 12*len(data))
+	// return unsafe.Slice(*(**byte)(unsafe.Pointer(&data)), 12*len(data))
+	header := *(*reflect.SliceHeader)(unsafe.Pointer(&data))
+	header.Len = 12 * len(data)
+	header.Cap = 12 * len(data)
+	bytes := *(*[]byte)(unsafe.Pointer(&header))
+	return bytes
 }
 
 // BytesToInt96 converts the byte slice passed as argument to a slice of Int96
@@ -79,7 +85,12 @@ func Int96ToBytes(data []Int96) []byte {
 // When the number of bytes in the input is not a multiple of 12, the function
 // truncates it in the returned slice.
 func BytesToInt96(data []byte) []Int96 {
-	return unsafe.Slice(*(**Int96)(unsafe.Pointer(&data)), len(data)/12)
+	// return unsafe.Slice(*(**Int96)(unsafe.Pointer(&data)), len(data)/12)
+	header := *(*reflect.SliceHeader)(unsafe.Pointer(&data))
+	header.Len = len(data) / 12
+	header.Cap = len(data) / 12
+	int96s := *(*[]Int96)(unsafe.Pointer(&header))
+	return int96s
 }
 
 func MaxLenInt96(data []Int96) int {
